@@ -3,7 +3,6 @@ const ExtractJwt = require('passport-jwt').ExtractJwt;
 const LocalStrategy = require('passport-local');
 const passport = require('passport');
 const bcrypr = require('bcrypt');
-const jwt = require('jwt-simple');
 
 const UsuarioRepository = require('../repository/usuario');
 
@@ -14,11 +13,6 @@ const jwtOptions = {
 
 exports.jwtOptions = jwtOptions;
 
-function tokenForUser(user){
-    const timestamp = new Date().getTime();
-    return jwt.encode({ sub: user.id, iat: timestamp }, jwtOptions.secretOrKey);
-}
-
 const localStrategy = new LocalStrategy({usernameField: 'email'}, ( email, password, done) => {
     UsuarioRepository
         .findUsuarioByEmail(email)
@@ -26,8 +20,7 @@ const localStrategy = new LocalStrategy({usernameField: 'email'}, ( email, passw
             if(!usr)
                 done(null, false);
             else if(bcrypr.compareSync(password, usr.senha)){
-                const payload = tokenForUser(usr);
-                done(null, payload);
+                done(null, usr);
             }
             else
                 done(null, false);
@@ -56,14 +49,3 @@ passport.serializeUser(function(user, done) {
 passport.deserializeUser(function(user, done) {
     done(null, user);
 });
-
-const login = ({email, senha, req}) => {
-    return new Promise((resolve, reject) => {
-        passport.authenticate('local', (err, usuario) => {
-          if(!usuario) reject('Credenciais inválidas')
-          else req.login({email, password: senha}, () => resolve(usuario))
-        })({body: {email, password: senha}});
-    })
-}
-
-module.exports = { login }

@@ -3,28 +3,23 @@ var express = require('express');
 require('express-async-errors');
 var logger = require('morgan');
 var passport = require('passport');
-var expressGraphQL = require('express-graphql');
-
-const schema = require('./src/schema/schema');
+var cors = require('cors')
 
 var app = express();
 
+app.use(cors());
 app.use(passport.initialize());
 
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use('/graphql',(req,res,next) => {
-  if(req.headers['authorization']){
-    passport.authenticate('jwt')(req,res,next);
-  }else{
-    next();
-  }
-},expressGraphQL({
-  graphiql: true,
-  schema
-}));
+
+//ROUTES
+var AuthRoute = require('./src/routes/auth');
+var AulaAluno = require('./src/routes/aula-aluno');
+app.use('/auth', AuthRoute);
+app.use('/aula-aluno', AulaAluno);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

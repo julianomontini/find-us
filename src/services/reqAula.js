@@ -21,11 +21,11 @@ class ReqAulaService{
             }
         )
         if(validationResult)
-            return Promise.reject(JSON.stringify(validationResult));
+            return Promise.reject(validationResult);
         
         const format = 'DD/MM/YYYY HH:mm';
-        if(moment(inicio, format).isAfter(moment(fim, format))){
-            return Promise.reject('Horário Inválido');
+        if(!inicio || !fim || moment(inicio, format, true).isAfter(moment(fim, format, true))){
+            return Promise.reject({horario: ['Horário Inválido']});
         }
 
         return ReqAulaRepository.criar({titulo, descricao, inicio, fim, idAluno: idUsuario, tags});

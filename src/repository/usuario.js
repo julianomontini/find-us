@@ -32,7 +32,19 @@ class UsuarioRepository{
         return result.rows[0];
     }
 
-    
+    async getUsuarioFull(idUsuario){
+        const query = `
+            SELECT ID, NOME, EMAIL, CELULAR
+            FROM USUARIO
+            WHERE ID = $1
+        `;
+        const usuario = (await db.query(query, [idUsuario])).rows[0];
+        const perfis = await PerfilRepository.findPerfisByIdUsuario(idUsuario);
+        usuario.perfis = perfis;
+        return usuario;
+
+    }
+
     async criaUsuario({nome, email, senha, cpf, celular, perfis = []}){
         const idPerfis = await PerfilRepository.findIdsPerfisByNome(perfis);
         try{
@@ -41,7 +53,7 @@ class UsuarioRepository{
             const createUserQuery = `
                 INSERT INTO USUARIO(NOME, EMAIL, SENHA, CPF, CELULAR)
                 VALUES($1, $2, $3, $4, $5)
-                RETURNING ID, NOME, EMAIL, SENHA, CPF, CELULAR
+                RETURNING ID, NOME, EMAIL, CPF, CELULAR
             `;
             const createUserResult = await db.query(createUserQuery, [nome, email, senha, cpf, celular]);
             const newUser = createUserResult.rows[0];

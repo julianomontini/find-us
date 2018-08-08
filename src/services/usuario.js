@@ -17,14 +17,14 @@ class UsuarioService{
         });
 
         if(validation)
-            return Promise.reject(JSON.stringify(validation));
+            return Promise.reject(validation);
 
         if(await this.emailExistente(email)){
-            return Promise.reject(JSON.stringify({email: "Email Já cadastrado"}));
+            return Promise.reject({email: ["Email Já cadastrado"]});
         }
 
         if(await this.cpfExistente(cpf)){
-            return Promise.reject(JSON.stringify({cpf: "CPF Já cadastrado"}))
+            return Promise.reject({cpf: ["CPF Já cadastrado"]});
         }
 
         senha = await bcrypt.hash(senha, 10);

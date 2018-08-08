@@ -117,7 +117,7 @@ exports.aula = {
 
 //VALIDAÇÃO DE CPF
 const validateCpf = require('./cpf');
-validate.validators.cpf = (value, { message }) => {
+validate.validators.cpf = (value = "", { message }) => {
     return validateCpf(value) ? null : (message ? message : "Inválido");
 };
 validate.validators.isContainedIn = (values = [], { list = [], message }) => {

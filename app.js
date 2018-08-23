@@ -18,8 +18,12 @@ app.use(express.urlencoded({ extended: false }));
 //ROUTES
 var AuthRoute = require('./src/routes/auth');
 var AulaAluno = require('./src/routes/aula-aluno');
+var TagsRoute = require('./src/routes/tags');
+var AulaRoute = require('./src/routes/aula');
 app.use('/auth', AuthRoute);
 app.use('/aula-aluno', AulaAluno);
+app.use('/aula', AulaRoute);
+app.use('/tags', TagsRoute);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

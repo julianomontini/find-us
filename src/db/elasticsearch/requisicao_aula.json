@@ -1,0 +1,54 @@
+//PUT requisicao_aula
+{
+    "settings": {
+        "analysis": {
+            "filter": {
+                "brazilian_stop": {
+                    "type": "stop",
+                    "stopwords": "_brazilian_"
+                },
+                "brazilian_stemmer": {
+                    "type": "stemmer",
+                    "language": "brazilian"
+                }
+            },
+            "analyzer": {
+                "brazilian": {
+                    "tokenizer": "standard",
+                    "filter": [
+                        "lowercase",
+                        "brazilian_stop",
+                        "brazilian_stemmer"
+                    ]
+                }
+            }
+        }
+    },
+    "mappings": {
+        "_doc": {
+            "properties": {
+                "inicio": {
+                    "type": "date"
+                },
+                "fim": {
+                    "type": "date"
+                },
+                "localizacao": {
+                    "type": "geo_point"
+                },
+                "titulo": {
+                    "type": "text",
+                    "analyzer": "brazilian"
+                },
+                "descricao": {
+                    "type": "text",
+                    "analyzer": "brazilian"
+                },
+                "tags": {
+                    "type": "text",
+                    "analyzer": "brazilian"
+                }
+            }
+        }
+    }
+}

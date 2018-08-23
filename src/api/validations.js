@@ -17,7 +17,7 @@ exports.nomeUsuario = {
     },
     length: {
         minimum: 5,
-        maximum: 100,
+        maximum: 50,
         message: "Deve ter entre 5 e 50 caractéres"
     }
 }
@@ -25,10 +25,6 @@ exports.cpf = {
     presence: {
         allowEmpty: false,
         message: "Obrigatório"
-    },
-    length: {
-        is: 11,
-        message: "Deve ter exatamente 11 dígitos"
     },
     cpf: true
 }
@@ -102,7 +98,7 @@ exports.aula = {
         length: {
             minimum: 30,
             maximum: 300,
-            message: "Deve ter entre 5 e 35 caractéres"
+            message: "Deve ter entre 30 e 300 caractéres"
         }
     },
     tag: {

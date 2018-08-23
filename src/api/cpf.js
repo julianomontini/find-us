@@ -1,8 +1,23 @@
+const getInvalidos = () => {
+    const arr = [];
+    for(let i = 0; i < 9; i++){
+        let str = "";
+        for(let j = 0; j < 11; j++){
+            str += i+'';
+        }
+        arr.push(str);
+    }
+    return arr;
+}
+
 module.exports = (strCPF) => {
     var Soma;
     var Resto;
     Soma = 0;
-    if (strCPF == "00000000000") return false;
+    if(!strCPF || strCPF.length != 11)
+        return false;
+    if(getInvalidos().indexOf(strCPF) != -1)
+        return false;
      
     for (i=1; i<=9; i++) Soma = Soma + parseInt(strCPF.substring(i-1, i)) * (11 - i);
     Resto = (Soma * 10) % 11;

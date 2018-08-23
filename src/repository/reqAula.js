@@ -4,14 +4,6 @@ const TagService = require('../services/tag');
 
 class ReqAulaRepository{
     async criar({titulo, descricao, inicio, fim, idAluno, tags}){
-
-        const dbTags = [];
-
-        for(let tag of tags){
-            const result = await TagService.criarSeNaoExistir(tag);
-            dbTags.push(result);
-        }
-
         try{
             await db.query('BEGIN');
     
@@ -22,7 +14,7 @@ class ReqAulaRepository{
             `;
             const result = await db.query(query, [titulo, descricao, inicio, fim, idAluno]);
             const novaAula = result.rows[0];
-            for(let tag of dbTags){
+            for(let tag of tags){
                 const tagQuery = `
                     INSERT INTO TAG_AULA(ID_AULA, ID_TAG)
                     VALUES($1, $2)
@@ -42,6 +34,37 @@ class ReqAulaRepository{
         `
         const result = await db.query(query, [idAluno]);
         return result.rows;
+    }
+
+    async getAulaFull(idAula){
+        const query = `
+            SELECT 
+                ra.id, 
+                ra.id_aluno,
+                ra.titulo,
+                ra.descricao, 
+                ra.inicio, 
+                ra.inicio, 
+                ra.fim,
+                (
+                    SELECT JSON_AGG(JSON_BUILD_OBJECT('id', T.ID, 'nome', T.NOME, 'nome_simples', T.NOME_SIMPLES))
+                    FROM TAG_AULA TA
+                    JOIN TAG T
+                    ON TA.ID_TAG = T.ID
+                    WHERE TA.ID_AULA = RA.ID
+                ) as tags,
+                (
+                    SELECT JSON_BUILD_OBJECT('nome', U.NOME, 'celular', u.celular)
+                    FROM USUARIO U
+                    WHERE ID = ra.id_professor
+                ) as professor
+            FROM requisicao_aula ra
+            WHERE id = $1
+        `;
+        const result = await db.query(query, [idAula]);
+        if(result.rows)
+            return result.rows[0];
+        return null;
     }
 }
 module.exports = new ReqAulaRepository();

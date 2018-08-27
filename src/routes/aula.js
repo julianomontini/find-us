@@ -2,55 +2,27 @@ var router = require('express').Router();
 var passport = require('passport');
 const _ = require('lodash');
 
-var elastic = require('../db/elasticsearch');
-
-var PerfilMiddleware = require('../middleware/perfil')
+var elasticApi = require('../elasticsearch/api');
+var PerfilMiddleware = require('../middleware/perfil');
+var ReqAulaService = require('../services/reqAula');
 router.use(passport.authenticate('jwt'), PerfilMiddleware('Professor'));
 
-router.get('/', async(req,res,next) => {
+router.get('/', async (req,res) => {
     const term = req.query.term;
     if(!term)
         return res.status(400).send({mensagem: 'Termo obrigatório'});
-    const results = await elastic.search({
-        index: 'requisicao_aula',
-        body: {
-            query: {
-                bool: {
-                    must: [{
-                        multi_match: {
-                            query: term,
-                            fields: [
-                                'titulo',
-                                'descricao',
-                                'tags'
-                            ]
-                        }
-                    }],
-                    should: [{
-                            match_phrase: {
-                                titulo: {
-                                    query: term,
-                                    slop: 3,
-                                    boost: 5
-                                }
-                            }
-                        },
-                        {
-                            match_phrase: {
-                                descricao: {
-                                    query: term,
-                                    slop: 5,
-                                    boost: 2
-                                }
-                            }
-                        }
-                    ]
-                }
-            }
-        }
-    });
+    const results = await elasticApi.aula.findSugestoesAulaByTermo(term);
     const aulas = _.map(results.hits.hits, r => r._source);
     res.send(aulas);
+});
+
+router.post('/inscrever/:id', async(req,res,next) => {
+    try{
+        await ReqAulaService.inscreverProfessor(req.params.id, req.user.id);
+        res.send();
+    }catch(e){
+        next(e);
+    }
 });
 
 module.exports = router;

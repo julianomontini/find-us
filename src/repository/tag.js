@@ -1,4 +1,4 @@
-const db = require('../db/db');
+const db = require('../db');
 
 class TagService{
     async procuraTagPorNomeSimples(nome){
@@ -32,6 +32,14 @@ class TagService{
         const result = await db.query(query, [idAula]);
         console.log(result.rows);
         return result.rows;
+    }
+
+    async atualizarTagsAula(idAula, tags = []){
+        await db.query('DELETE FROM TAG_AULA WHERE ID_AULA = $1', [idAula]);
+
+        for(let tag of tags){
+            await db.query('INSERT INTO TAG_AULA(ID_AULA, ID_TAG) VALUES ($1, $2)', [idAula, tag.id]);
+        }
     }
 }
 

@@ -25,14 +25,23 @@ router.get('/', async(req,res,next) => {
     }
 })
 
+
 router.get('/:id', async(req,res,next) => {
     const idAula = req.params.id;
     try{
         const aula = await AulaService.getDetalheAula(idAula);
         if(!aula)
-            return res.status(404).send();
+        return res.status(404).send();
         if(aula.id_aluno !== req.user.id)
-            return res.status(403).send();
+        return res.status(403).send();
+        res.send(aula);
+    }catch(e){
+        next(e);
+    }
+})
+router.put('/:id', async(req,res,next) =>{
+    try{
+        const aula = await AulaService.atualizarAula(req.user.id, req.params.id, req.body);
         res.send(aula);
     }catch(e){
         next(e);

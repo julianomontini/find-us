@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const db = require('../db/db');
+const db = require('../db');
 
 class PerfilRepository{
     async findIdsPerfisByNome(nomes = []){

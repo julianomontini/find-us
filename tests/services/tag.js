@@ -9,7 +9,13 @@ const expect = chai.expect;
 const TagService = require('../../src/services/tag');
 const TagRepository = require('../../src/repository/tag');
 
+const elastic = require('../../src/db/elasticsearch');
+
 describe('Serviço Tag', () => {
+    before(() => {
+        sinon.stub(elastic, 'create')
+    })
+    after(() => elastic.create.restore())
     describe('Normalizar nome', () => {
         it('Deve retornar vazio se string nula for passada', () => {
             expect(TagService.normalizarNome()).to.be.eq('');

@@ -1,4 +1,4 @@
-const elastic = require('../db/elasticsearch');
+const elasticApi = require('../elasticsearch/api');
 const TagRepository = require('../repository/tag');
 const _ = require('lodash');
 
@@ -8,15 +8,7 @@ class TagService{
         if(tag) return tag;
 
         let newTag = await TagRepository.criarTag(nome, this.normalizarNome(nome));
-        await elastic.create({
-            index: 'tags',
-            id: newTag.id,
-            type: '_doc',
-            body: {
-                nome: newTag.nome,
-                nome_simples: newTag.nome_simples
-            }
-        });
+        await elasticApi.tag.criarTag(newTag);
         return newTag;
     }
 
@@ -25,29 +17,7 @@ class TagService{
     }
 
     async procurarSugestoes(nome){
-        const result = await elastic.search({
-            index: 'tags',
-            size: 5,
-            body: {
-                query: {
-                    bool: {
-                        should: [{
-                                wildcard: {
-                                    nome: {
-                                        value: `${nome}*`
-                                    }
-                                }
-                            },
-                            {
-                                match: {
-                                    nome
-                                }
-                            }
-                        ]
-                    }
-                }
-            }
-        })
+        const result = await elasticApi.tag.findSugestoesByNome(nome);
         return _.map(result.hits.hits, h => {
             return{id: h._id, nome: h._source.nome, nome_simples: h._source.nome_simples}
         });

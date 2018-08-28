@@ -5,8 +5,8 @@ const _ = require('lodash');
 //VALIDATE.JS CONFIGURACAO DE DATA
 (() => {
     validate.extend(validate.validators.datetime, {
-        parse: (value, options) => moment(value, 'DD/MM/YYYY HH:mm').unix(),
-        format: (value, options) => moment.unix(value).format("DD/MM/YYYY HH:mm")
+        parse: (value, options) => moment(value).unix(),
+        format: (value, options) => moment.unix(value)
     });
 })();
 

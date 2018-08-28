@@ -12,7 +12,7 @@ const TagService = require('../services/tag');
 const errorBuilder = require('../api/errorBuilder');
 
 const isValidHorario = (inicio, fim) => {
-    const format = 'DD/MM/YYYY HH:mm';
+    const format = moment.ISO_8601;
     const mInicio = moment(inicio, format, true);
     const mFim = moment(fim, format, true);
     return (!mInicio.isValid() ||

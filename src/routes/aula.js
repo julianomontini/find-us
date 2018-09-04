@@ -7,11 +7,10 @@ var PerfilMiddleware = require('../middleware/perfil');
 var ReqAulaService = require('../services/reqAula');
 router.use(passport.authenticate('jwt'), PerfilMiddleware('Professor'));
 
-router.get('/', async (req,res) => {
-    const term = req.query.term;
-    if(!term)
+router.post('/search', async (req,res) => {
+    if(!req.body.term)
         return res.status(400).send({mensagem: 'Termo obrigatório'});
-    const results = await elasticApi.aula.findSugestoesAulaByTermo(term);
+    const results = await elasticApi.aula.findSugestoesAulaByTermo(req.body);
     const aulas = _.map(results.hits.hits, r => r._source);
     res.send(aulas);
 });

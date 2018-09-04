@@ -33,7 +33,7 @@ class ReqAulaService{
         await ReqAulaRepository.inserirProfessorAula(idAula, idProfessor);
         return;
     }
-    async criar({titulo, descricao, inicio, fim, idUsuario, tags}){
+    async criar({titulo, descricao, inicio, fim, idUsuario, tags, localizacao, preco}){
             const isAluno = await PerfilRepository.usuarioTemPerfil(idUsuario, 'Aluno');
         if(!isAluno) return Promise.reject(errorBuilder('Acesso negado', 403));
 
@@ -60,9 +60,9 @@ class ReqAulaService{
             normalizedTags.push(dbTag);
         }
 
-        const novaAula = await ReqAulaRepository.criar({titulo, descricao, inicio, fim, idAluno: idUsuario, tags: normalizedTags});
+        const novaAula = await ReqAulaRepository.criar({titulo, descricao, inicio, fim, idAluno: idUsuario, tags: normalizedTags, localizacao, preco});
         novaAula.tags = normalizedTags;
-        const novaAulaElastic = {...novaAula, tags: _.map(novaAula.tags, t => t.nome)};
+        const novaAulaElastic = {...novaAula, tags: _.map(novaAula.tags, t => t.nome), distance: localizacao};
         await elasticApi.aula.criarAula(novaAulaElastic);
         return novaAula;
 
@@ -72,7 +72,7 @@ class ReqAulaService{
     }
 
     async getDetalheAula(idAula){
-        return ReqAulaRepository.getAulaFull(idAula);
+        return ReqAulaRepository.getAulaById(idAula);
     }
 
     async atualizarAula(idAluno, idAula, {titulo, descricao, inicio, fim, tags = []}){

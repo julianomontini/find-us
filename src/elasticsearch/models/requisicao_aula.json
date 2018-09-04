@@ -47,6 +47,9 @@
                 "tags": {
                     "type": "text",
                     "analyzer": "brazilian"
+                },
+                "preco": {
+                    "type": "float"
                 }
             }
         }

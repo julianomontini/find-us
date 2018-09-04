@@ -2,14 +2,14 @@ const _ = require('lodash');
 
 const db = require('../db');
 const TagRepository = require('./tag');
+const errorBuilder = require('../api/errorBuilder');
 
 class ReqAulaRepository{
     async inserirProfessorAula(idAula, idProfessor){
         const query = `
-            UPDATE REQUISICAO_AULA
-            SET ID_PROFESSOR = $1
-            WHERE ID = $2
-        `;
+            INSERT INTO CANDIDATO_AULA(ID_PROFESSOR, ID_AULA, STATUS)
+            VALUES($1, $2, 'PENDENTE')
+        `
         await db.query(query, [idProfessor, idAula]);
         return;
     }
@@ -17,17 +17,17 @@ class ReqAulaRepository{
         const query = 'SELECT * FROM REQUISICAO_AULA WHERE ID = $1';
         return db.query(query, [id]).then(res => res.rows[0]);
     }
-    async criar({titulo, descricao, inicio, fim, idAluno, tags}){
+    async criar({titulo, descricao, inicio, fim, idAluno, tags, localizacao, preco}){
         try{
             await db.query('BEGIN');
     
             const query = `
-                INSERT INTO REQUISICAO_AULA(TITULO, DESCRICAO, INICIO, FIM, ID_ALUNO)
-                VALUES($1, $2, $3, $4, $5)
-                RETURNING ID, TITULO, DESCRICAO, INICIO, FIM, ID_ALUNO
+                INSERT INTO REQUISICAO_AULA(TITULO, DESCRICAO, INICIO, FIM, ID_ALUNO, LOCALIZACAO, PRECO)
+                VALUES($1, $2, $3, $4, $5, $6, $7)
+                RETURNING ID, TITULO, DESCRICAO, INICIO, FIM, ID_ALUNO, LOCALIZACAO, PRECO
             `;
 
-            const result = await db.query(query, [titulo, descricao, inicio, fim, idAluno]);
+            const result = await db.query(query, [titulo, descricao, inicio, fim, idAluno, localizacao, preco]);
             const novaAula = result.rows[0];
 
             await TagRepository.atualizarTagsAula(novaAula.id, tags);
@@ -45,37 +45,6 @@ class ReqAulaRepository{
         `
         const result = await db.query(query, [idAluno]);
         return result.rows;
-    }
-
-    async getAulaFull(idAula){
-        const query = `
-            SELECT 
-                ra.id, 
-                ra.id_aluno,
-                ra.titulo,
-                ra.descricao, 
-                ra.inicio, 
-                ra.inicio, 
-                ra.fim,
-                (
-                    SELECT JSON_AGG(JSON_BUILD_OBJECT('id', T.ID, 'nome', T.NOME, 'nome_simples', T.NOME_SIMPLES))
-                    FROM TAG_AULA TA
-                    JOIN TAG T
-                    ON TA.ID_TAG = T.ID
-                    WHERE TA.ID_AULA = RA.ID
-                ) as tags,
-                (
-                    SELECT JSON_BUILD_OBJECT('nome', U.NOME, 'celular', u.celular)
-                    FROM USUARIO U
-                    WHERE ID = ra.id_professor
-                ) as professor
-            FROM requisicao_aula ra
-            WHERE id = $1
-        `;
-        const result = await db.query(query, [idAula]);
-        if(result.rows)
-            return result.rows[0];
-        return null;
     }
 
     async atualizarAula(id, {titulo, descricao, inicio, fim, tags = []}){
@@ -104,6 +73,34 @@ class ReqAulaRepository{
     async getTagsAula(idAula){
         const res = await db.query('SELECT ID_TAG FROM TAG_AULA WHERE ID_AULA = $1', [idAula]);
         return res.rows.map(r => r.id_tag);
+    }
+
+    async getCandidatosAula(idAula){
+        const query = `
+            SELECT U.NOME
+            FROM USUARIO U
+            JOIN CANDIDATO_AULA CA
+            ON CA.ID_PROFESSOR = U.ID
+            WHERE CA.ID_AULA = $1
+        `;
+
+        return db.query(query, [idAula]).then(r => r.rows);
+    }
+
+    async aprovarCandidato(idAula, idProfessor){
+        const result = await db.query('SELECT 1 FROM CANDIDATO_AULA WHERE ID_AULA = $1 AND ID_PROFESSOR = $2', [idAula, idProfessor]);
+        if(!result.rows[0])
+            return Promise.reject(errorBuilder({mensagem: 'Usuário não é candidato'}, 400));
+        try{
+            await db.query('BEGIN');
+            await db.query('UPDATE REQUISICAO_AULA SET ID_PROFESSOR = $1 WHERE ID = $2', [idProfessor, idAula]);
+            await db.query("UPDATE CANDIDATO_AULA SET STATUS = 'APROVADO' WHERE ID_AULA = $1 AND ID_PROFESSOR = $2", [idAula, idProfessor]);
+            await db.query("UPDATE CANDIDATO_AULA SET STATUS = 'REJEITADO' WHERE ID_AULA = $1 AND STATUS != 'APROVADO'", [idAula]);
+            await db.query("COMMIT");
+        }catch(e){
+            await db.query('ROLLBACK');
+            throw e;
+        }
     }
 }
 module.exports = new ReqAulaRepository();

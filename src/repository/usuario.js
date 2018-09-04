@@ -34,7 +34,7 @@ class UsuarioRepository{
 
     async getUsuarioFull(idUsuario){
         const query = `
-            SELECT ID, NOME, EMAIL, CELULAR
+            SELECT *
             FROM USUARIO
             WHERE ID = $1
         `;

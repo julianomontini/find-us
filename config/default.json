@@ -1,0 +1,13 @@
+{
+    "db": {
+        "user": "postgres",
+        "host": "localhost",
+        "database": "find-us",
+        "password": "postgres",
+        "port": 5432
+    },
+    "elastic": {
+        "host": "localhost:9200",
+        "log": "trace"
+    }
+}

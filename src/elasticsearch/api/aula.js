@@ -84,5 +84,12 @@ module.exports = {
             index: 'requisicao_aula',
             body
         });
+    },
+    async getAulaById(idAula){
+        let result = await elastic.get({id: idAula, index: 'requisicao_aula', type: '_doc'});
+        if(!result.found)
+            return null;
+        else
+            return result._source;
     }
 }

@@ -1,6 +1,3 @@
 const elastic = require('elasticsearch');
-
-module.exports = new elastic.Client({
-    host: 'localhost:9200',
-    log: 'trace'
-})
+const config = require('config').get('elastic');
+module.exports = new elastic.Client({...config});

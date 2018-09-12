@@ -72,7 +72,10 @@ class ReqAulaService{
     }
 
     async getDetalheAula(idAula){
-        return ReqAulaRepository.getAulaById(idAula);
+        let aula =  await ReqAulaRepository.getAulaById(idAula);
+        let aulaElastic = await elasticApi.aula.getAulaById(idAula);
+        aula.tags = aulaElastic.tags;
+        return aula;
     }
 
     async atualizarAula(idAluno, idAula, {titulo, descricao, inicio, fim, tags = []}){

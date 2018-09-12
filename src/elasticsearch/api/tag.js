@@ -1,4 +1,5 @@
 const elastic = require('../index');
+const capitalize = require('../../api/text').capitalizeText;
 
 module.exports = {
     findSugestoesByNome(nome){
@@ -26,15 +27,31 @@ module.exports = {
             }
         })
     },
-    criarTag(newTag){
-        return elastic.index({
+    async criarTagSeNaoExistir(tag){
+        let result = await elastic.search({
             index: 'tags',
-            id: newTag.id,
-            type: '_doc',
             body: {
-                nome: newTag.nome,
-                nome_simples: newTag.nome_simples
+                _source: "nome", 
+                query: {
+                    match_phrase: {
+                        nome: tag
+                    }
+                }
             }
         });
+        let hit = result.hits.hits[0];
+        if(hit)
+            return hit._source.nome;
+
+        let capitalizedTag = capitalize(tag);
+        await elastic.index({
+            index: 'tags',
+            type: '_doc',
+            body: {
+                nome: capitalizedTag
+            }
+        });
+
+        return capitalizedTag;
     }
 }

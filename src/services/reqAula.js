@@ -54,15 +54,15 @@ class ReqAulaService{
             return Promise.reject(errorBuilder({horario: ['Horário Inválido']}))
         }
 
-        const normalizedTags = [];
+        const capitalizedTags = [];
         for(let tag of tags){
-            let dbTag = await TagService.criarSeNaoExistir(tag);
-            normalizedTags.push(dbTag);
+            let cpTag = await elasticApi.tag.criarTagSeNaoExistir(tag);
+            capitalizedTags.push(cpTag);
         }
 
-        const novaAula = await ReqAulaRepository.criar({titulo, descricao, inicio, fim, idAluno: idUsuario, tags: normalizedTags, localizacao, preco});
-        novaAula.tags = normalizedTags;
-        const novaAulaElastic = {...novaAula, tags: _.map(novaAula.tags, t => t.nome), distance: localizacao};
+        const novaAula = await ReqAulaRepository.criar({titulo, descricao, inicio, fim, idAluno: idUsuario, localizacao, preco});
+        novaAula.tags = capitalizedTags;
+        const novaAulaElastic = {...novaAula, localizacao};
         await elasticApi.aula.criarAula(novaAulaElastic);
         return novaAula;
 
@@ -76,16 +76,16 @@ class ReqAulaService{
     }
 
     async atualizarAula(idAluno, idAula, {titulo, descricao, inicio, fim, tags = []}){
-        const normalizedTags = [];
-        for(let tag of tags){
-            let dbTag = await TagService.criarSeNaoExistir(tag);
-            normalizedTags.push(dbTag);
-        }
-
         let aula = await ReqAulaRepository.getAulaById(idAula);
 
         if(aula.id_aluno != idAluno)
             return Promise.reject(errorBuilder({mensagem: 'Acesso negado'}, 403));
+
+        const capitalizedTags = [];
+        for(let tag of tags){
+            let cpTag = await elasticApi.tag.criarTagSeNaoExistir(tag);
+            capitalizedTags.push(cpTag);
+        }
 
         titulo = titulo || aula.titulo;
         descricao = descricao || aula.descricao;
@@ -105,8 +105,9 @@ class ReqAulaService{
         if(validationResult)
             return Promise.reject(errorBuilder(validationResult));
 
-        const aulaAtualizada =  await ReqAulaRepository.atualizarAula(idAula, {titulo, descricao, inicio, fim, tags: normalizedTags});
-        await elasticApi.aula.criarAula({...aulaAtualizada, tags: _.map(aulaAtualizada.tags, t => t.nome)});
+        const aulaAtualizada =  await ReqAulaRepository.atualizarAula(idAula, {titulo, descricao, inicio, fim});
+        aulaAtualizada.tags = capitalizedTags;
+        await elasticApi.aula.criarAula(aulaAtualizada);
         return aulaAtualizada;
     }
 }

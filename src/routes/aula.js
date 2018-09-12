@@ -15,7 +15,7 @@ router.post('/search', async (req,res) => {
     res.send(aulas);
 });
 
-router.post('/inscrever/:id', async(req,res,next) => {
+router.post('/:id/inscrever', async(req,res,next) => {
     try{
         await ReqAulaService.inscreverProfessor(req.params.id, req.user.id);
         res.send();

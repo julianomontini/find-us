@@ -11,7 +11,6 @@ router.use(passport.authenticate('jwt'), PerfilMiddleware('Aluno'));
 
 router.post('/', async (req, res, next) => {
     const { titulo, descricao, inicio, fim, tags, localizacao, preco } = req.body;
-    console.log('as coordenadas recebidas foram', localizacao);
     try{
         const result = await AulaService.criar({titulo, descricao, inicio, fim, tags, idUsuario: req.user.id, localizacao, preco});
         res.send(result);
@@ -55,9 +54,15 @@ router.get('/:id/candidatos', (req,res,next) => {
         .then(r => res.send(r))
         .catch(e => next(e))
 })
-router.put('/:id/aprovar', (req,res,next) => {
+router.put('/:id/candidatos/:idCandidato/aprovar', (req,res,next) => {
     ReqAulaRepository
-        .aprovarCandidato(req.params.id, req.body.idProfessor)
+        .aprovarCandidato(req.params.id, req.params.idCandidato)
+        .then(r => res.send())
+        .catch(e => next(e))
+})
+router.put('/:id/candidatos/:idCandidato/rejeitar', (req,res,next) => {
+    ReqAulaRepository
+        .rejeitarCandidato(req.params.id, req.params.idCandidato)
         .then(r => res.send())
         .catch(e => next(e))
 })

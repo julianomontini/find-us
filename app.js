@@ -21,11 +21,13 @@ var AulaAluno = require('./src/routes/aula-aluno');
 var TagsRoute = require('./src/routes/tags');
 var AulaRoute = require('./src/routes/aula');
 var UsuarioRoute = require('./src/routes/usuario');
+var ProfessorRoute = require('./src/routes/professor');
 app.use('/auth', AuthRoute);
 app.use('/aula-aluno', AulaAluno);
 app.use('/aula', AulaRoute);
 app.use('/tags', TagsRoute);
 app.use('/usuario', UsuarioRoute);
+app.use('/professor', ProfessorRoute);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

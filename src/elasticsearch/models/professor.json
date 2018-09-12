@@ -1,0 +1,41 @@
+//PUT professor
+{
+  
+  "mappings": {
+    "_doc": {
+      "properties": {
+        "localizacao": {
+          "type": "geo_point"
+        },
+        "tags": {
+          "type": "text",
+          "analyzer": "brazilian"
+        }
+      }
+    }
+  },
+  "settings": {
+    "analysis": {
+      "filter": {
+        "brazilian_stop": {
+          "type":       "stop",
+          "stopwords":  "_brazilian_" 
+        },
+        "brazilian_stemmer": {
+          "type":       "stemmer",
+          "language":   "brazilian"
+        }
+      },
+      "analyzer": {
+        "brazilian": {
+          "tokenizer":  "standard",
+          "filter": [
+            "lowercase",
+            "brazilian_stop",
+            "brazilian_stemmer"
+          ]
+        }
+      }
+    }
+  }
+}

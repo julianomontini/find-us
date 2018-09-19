@@ -4,7 +4,7 @@ const LocalStrategy = require('passport-local');
 const passport = require('passport');
 const bcrypr = require('bcrypt');
 
-const UsuarioRepository = require('../repository/usuario');
+const Customer = require('../../models').Customer;
 
 const jwtOptions = {
     jwtFromRequest: ExtractJwt.fromHeader('authorization'),
@@ -14,22 +14,23 @@ const jwtOptions = {
 exports.jwtOptions = jwtOptions;
 
 const localStrategy = new LocalStrategy({usernameField: 'email'}, ( email, password, done) => {
-    UsuarioRepository
-        .findUsuarioByEmail(email)
-        .then(usr => {
-            if(!usr)
+    Customer
+        .findOne({where: {email}})
+        .then(user => {
+            if(!user)
                 done(null, false);
-            else if(bcrypr.compareSync(password, usr.senha)){
-                done(null, usr);
+            else if(bcrypr.compareSync(password, user.password)){
+                done(null, user);
             }
             else
                 done(null, false);
-        }).catch(err => done(err))
+        })
+        .catch(err => done(err));
 })
 
 const jwtLogin = new JwtStrategy(jwtOptions, (payload, done) => {
-    UsuarioRepository
-        .findUsuarioById(payload.sub)
+    Customer
+        .findById(payload.sub)
         .then(user => {
             if(user) 
                 done(null, user)

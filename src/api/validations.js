@@ -10,115 +10,96 @@ const _ = require('lodash');
     });
 })();
 
-exports.nomeUsuario = {
-    presence: {
-        allowEmpty: false,
-        message: "Obrigatório"
-    },
-    length: {
-        minimum: 5,
-        maximum: 50,
-        message: "Deve ter entre 5 e 50 caractéres"
-    }
-}
-exports.cpf = {
-    presence: {
-        allowEmpty: false,
-        message: "Obrigatório"
-    },
-    cpf: true
-}
-exports.email = {
-    presence: {
-        allowEmpty: false,
-        message: "Obrigatório"
-    },
-    email: {
-        message: "Inválido"
-    }
-}
-exports.senha = {
-    presence: {
-        allowEmpty: false,
-        message: "Obrigatória"
-    },
-    length: {
-        minimum: 6,
-        maximum: 20,
-        message: "Deve ter entre 6 e 20 caractéres"
-    }
-}
-exports.perfilPublico = {
-    presence: {
-        allowEmpty: false,
-        message: "Deve ser selecionado"
-    },
-    isContainedIn: {
-        list: ['Aluno', 'Professor']
-    }
-}
-exports.celular = {
-    presence: {
-        allowEmpty: false,
-        message: "Obrigatório"
-    },
-    length: {
-        minimum: 10,
-        maximum: 11,
-        message: "Deve ter entre 10 e 11 dígitos"
-    },
-    numericality: {
-        message: "Inválido"
-    }
-}
 
-exports.aula = {
-    horario: {
-        datetime: {
-            latest: moment.utc().add(1, 'years'),
-            message: "Inválido"
-        }
-    },
-    titulo: {
+exports.customer = {
+    name: {
         presence: {
-            allowEmpty: false,
-            message: "Obrigatório"
+            allowEmpty: false
         },
         length: {
             minimum: 5,
-            maximum: 35,
-            message: "Deve ter entre 5 e 35 caractéres"
+            maximum: 50
         }
     },
-    descricao: {
+    cpf: {
         presence: {
-            allowEmpty: false,
-            message: "Obrigatório"
+            allowEmpty: false
+        },
+        cpf: true
+    },
+    email: {
+        presence: {
+            allowEmpty: false
+        },
+        email: true
+    },
+    password: {
+        presence: {
+            allowEmpty: false
+        },
+        length: {
+            minimum: 6,
+            maximum: 20
+        }
+    },
+    roles: {
+        presence: {
+            allowEmpty: false
+        },
+        isContainedIn: {
+            list: ['Student', 'Teacher']
+        }
+    },
+    phone: {
+        presence: {
+            allowEmpty: false
+        },
+        length: {
+            minimum: 10,
+            maximum: 11
+        },
+        numericality: true
+    }
+}
+
+exports.lesson = {
+    time: {
+        datetime: {
+            latest: moment.utc().add(1, 'years')
+        }
+    },
+    title: {
+        presence: {
+            allowEmpty: false
+        },
+        length: {
+            minimum: 5,
+            maximum: 35
+        }
+    },
+    description: {
+        presence: {
+            allowEmpty: false
         },
         length: {
             minimum: 30,
-            maximum: 300,
-            message: "Deve ter entre 30 e 300 caractéres"
-        }
-    },
-    tag: {
-        presence: {
-            allowEmpty: false,
-            message: "Deve ser selecionada"
+            maximum: 300
         }
     }
 }
 
-//Validadores custom
+//---------Custom Validators-----------
 
-//VALIDAÇÃO DE CPF
+//CPF Validator
 const validateCpf = require('./cpf');
 validate.validators.cpf = (value = "", { message }) => {
-    return validateCpf(value) ? null : (message ? message : "Inválido");
+    return validateCpf(value) ? null : (message ? message : "Invalid");
 };
+
+//Is contained in validator
 validate.validators.isContainedIn = (values = [], { list = [], message }) => {
     for(v of values){
         if(list.indexOf(v) === -1)
-            return message ? message : "Não está condido na lista";
+            return message ? message : `should be contained in [${list.toString()}]`;
     }
 }

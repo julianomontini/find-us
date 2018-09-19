@@ -16,18 +16,8 @@ app.use(express.urlencoded({ extended: false }));
 
 
 //ROUTES
-var AuthRoute = require('./src/routes/auth');
-var AulaAluno = require('./src/routes/aula-aluno');
-var TagsRoute = require('./src/routes/tags');
-var AulaRoute = require('./src/routes/aula');
-var UsuarioRoute = require('./src/routes/usuario');
-var ProfessorRoute = require('./src/routes/professor');
-app.use('/auth', AuthRoute);
-app.use('/aula-aluno', AulaAluno);
-app.use('/aula', AulaRoute);
-app.use('/tags', TagsRoute);
-app.use('/usuario', UsuarioRoute);
-app.use('/professor', ProfessorRoute);
+const GeneralRouter = require('./src/routes/general');
+app.use('/', GeneralRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -43,7 +33,7 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.send(err.message);
+  res.send({errors: err.errors});
 });
 
 module.exports = app;

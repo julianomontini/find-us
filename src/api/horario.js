@@ -1,30 +1,20 @@
 const moment = require('moment');
 
-const temConflito = (horarioA, horarioB) => {
-    let mA = formatDate(horarioA);
-    let mB = formatDate(horarioB);
-
-    if(mA.inicio >= (mB.inicio) && mA.inicio <= (mB.fim))
+const confictsWith = (horarioA, horarioB) => {
+    if(horarioA.inicio >= (horarioB.inicio) && horarioA.inicio <= (horarioB.fim))
         return true;
-    if(mA.inicio <= (mB.inicio) && mA.fim >= (mB.fim))
+    if(horarioA.inicio <= (horarioB.inicio) && horarioA.fim >= (horarioB.fim))
         return true;
-    if(mA.fim >= (mB.inicio) && mA.fim <= (mB.fim))
+    if(horarioA.fim >= (horarioB.inicio) && horarioA.fim <= (horarioB.fim))
         return true;
     return false;
 }
 
-const conflitaComQualquer = (horario, horarios = []) => {
+const confictsWithAny = (horario, horarios = []) => {
     return horarios.some(h => temConflito(horario, h));
 }
 
 module.exports = {
-    temConflito,
-    conflitaComQualquer
-}
-
-const formatDate = ({inicio, fim, format = 'DD/MM/YYYY HH:mm'}) => {
-    return {
-        inicio: moment(inicio, format, true),
-        fim: moment(fim, format, true)
-    }
+    confictsWith,
+    confictsWithAny
 }

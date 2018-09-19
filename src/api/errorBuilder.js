@@ -1,5 +1,5 @@
-module.exports = (message={erro: "Erro genérico"}, status=400) => {
+module.exports = (status = 400, ...error) => {
     return {
-        status, message
+        status, errors: [...error]
     }
 }

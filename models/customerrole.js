@@ -1,8 +1,8 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
   const CustomerRole = sequelize.define('CustomerRole', {
-    customerId: DataTypes.BIGINT,
-    roleId: DataTypes.BIGINT,
+    customerId: DataTypes.INTEGER,
+    roleId: DataTypes.INTEGER,
     status: {
       type: DataTypes.ENUM,
       values: ['active', 'blocked', 'inactive'] ,

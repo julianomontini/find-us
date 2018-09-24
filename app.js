@@ -17,7 +17,13 @@ app.use(express.urlencoded({ extended: false }));
 
 //ROUTES
 const GeneralRouter = require('./src/routes/general');
+const StudentLessonRouter = require('./src/routes/studentLesson');
+const TeacherLessonRouter = require('./src/routes/teacherLesson');
+const CustomerRouter = require('./src/routes/customer');
 app.use('/', GeneralRouter);
+app.use('/student-lesson', StudentLessonRouter);
+app.use('/teacher-lesson', TeacherLessonRouter);
+app.use('/customer', CustomerRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

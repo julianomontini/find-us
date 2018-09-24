@@ -1,11 +1,10 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
   const LessonCandidate = sequelize.define('LessonCandidate', {
-    lessonId: DataTypes.BIGINT,
-    teacherId: DataTypes.BIGINT,
+    lessonId: DataTypes.INTEGER,
+    teacherId: DataTypes.INTEGER,
     status: {
-     type: DataTypes.ENUM,
-     values: ['pending', 'accepted', 'declined'],
+     type: DataTypes.STRING,
      defaultValue: 'pending'
     }
   }, {timestamps: true});

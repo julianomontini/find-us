@@ -61,11 +61,23 @@ exports.customer = {
         numericality: true
     }
 }
-
 exports.lesson = {
-    time: {
+    startTime: {
+        presence: {
+            allowEmpty: false
+        },
         datetime: {
-            latest: moment.utc().add(1, 'years')
+            latest: moment.utc().add(1, 'years'),
+            earliest: moment.utc().subtract(1, 'minute')
+        }
+    },
+    endTime: {
+        presence: {
+            allowEmpty: false
+        },
+        datetime: {
+            latest: moment.utc().add(1, 'years'),
+            earliest: moment.utc().subtract(1, 'minute')
         }
     },
     title: {
@@ -85,8 +97,26 @@ exports.lesson = {
             minimum: 30,
             maximum: 300
         }
+    },
+    price: {
+        presence: {
+            allowEmpty: false
+        },
+        numericality: {
+            greaterThatOrEqualTo: 0
+        }
     }
-}
+},
+exports.tags = {
+    tags: {
+        presence: {
+            allowEmpty: false
+        },
+        length: {
+            minimum: 1
+        }
+    }
+};
 
 //---------Custom Validators-----------
 

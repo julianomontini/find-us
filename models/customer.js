@@ -9,7 +9,8 @@ module.exports = (sequelize, DataTypes) => {
   }, {timestamps: true});
   Customer.associate = function(models) {
     Customer.belongsToMany(models.Role, {as: 'Roles', through: 'CustomerRole'});
-    Customer.belongsToMany(models.Lesson, {as: 'CandidatedLessons', through: 'LessonCandidate', foreignKey: 'teacherId'})
+    Customer.belongsToMany(models.Lesson, {as: 'CandidatedLessons', through: 'LessonCandidate', foreignKey: 'teacherId'});
+    Customer.hasOne(models.CustomerConfiguration, {as: 'Configuration', foreignKey: 'customerId'});
   };
   return Customer;
 };

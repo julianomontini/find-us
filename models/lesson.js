@@ -1,15 +1,18 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
   const Lesson = sequelize.define('Lesson', {
-    studentId: DataTypes.BIGINT,
-    teacherId: DataTypes.BIGINT,
+    studentId: DataTypes.INTEGER,
+    teacherId: DataTypes.INTEGER,
     title: DataTypes.STRING,
     description: DataTypes.STRING,
     startTime: DataTypes.DATE,
     endTime: DataTypes.DATE,
-    location: DataTypes.JSONB,
-    price: DataTypes.NUMERIC
-  }, {timestamps: true});
+    price: DataTypes.NUMERIC,
+    status: {
+      type: DataTypes.STRING,
+      defaultValue: 'pending'
+    }
+  }, {timestamps: true, paranoid: true});
   Lesson.associate = function(models) {
     Lesson.belongsTo(models.Customer, {as: 'Student'});
     Lesson.belongsTo(models.Customer, {as: 'Teacher'});

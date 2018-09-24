@@ -1,9 +1,12 @@
 const validate = require('validate.js');
+const _ = require('lodash');
 
 const _v = require('../api/validations');
 const errorBuilder = require('../api/errorBuilder');
-const {Customer, Role} = require('../../models');
+const {Customer, Role, CustomerConfiguration,sequelize} = require('../../models');
 const {hash} = require('../api/password')
+
+
 const customerService = {};
 
 customerService.create = async customer => {
@@ -22,16 +25,46 @@ customerService.create = async customer => {
     if(cpfIsTaken)
         return Promise.reject(errorBuilder(422, 'Cpf already registered'));
 
-    let newCustomer = await Customer.create(customer)
-    let roles = await Role.findAll({where: {name: customer.roles}})
-    newCustomer.setRoles(roles);
-    return {
-        id: newCustomer.id, 
-        name: newCustomer.name, 
-        cpf: newCustomer.cpf, 
-        email: newCustomer.email, 
-        phone: newCustomer.phone
-    }
+    let newCustomer = await sequelize.transaction(async tr => {
+        let newCustomer = await Customer.create(customer, {transaction: tr})
+
+        let roles = await Role.findAll({where: {name: customer.roles}})
+        await newCustomer.setRoles(roles, {transaction: tr});
+        await newCustomer.createConfiguration({}, {transaction: tr})
+        return newCustomer;
+    })
+
+    return customerService.get(newCustomer.id);
+}
+
+customerService.get = async customerId => {
+    let customer = await Customer.findById(customerId, 
+        {
+            attributes: {
+                exclude: ['password', 'createdAt', 'updatedAt']
+            },
+            include: [
+                {
+                    model: Role, 
+                    as: 'Roles',
+                    attributes: ['id', 'name'],
+                    through: {
+                        where: {
+                            status: 'active'
+                        },
+                        attributes: []
+                    }
+                },
+                {
+                    model: CustomerConfiguration, 
+                    as: 'Configuration',
+                    attributes: ['location']
+                }
+            ]
+        }
+    );
+    customer = customer.get({plain: true});
+    return customer;
 }
 
 module.exports = customerService;

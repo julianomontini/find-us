@@ -6,17 +6,17 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.BIGINT
+        type: Sequelize.INTEGER
       },
       studentId: {
-        type: Sequelize.BIGINT,
+        type: Sequelize.INTEGER,
         references: {model: 'customers', key: 'id'},
         allowNull: false
       },
       teacherId: {
-        type: Sequelize.BIGINT,
+        type: Sequelize.INTEGER,
         references: {model: 'customers', key: 'id'},
-        allowNull: false
+        allowNull: true
       },
       title: {
         type: Sequelize.STRING,
@@ -36,12 +36,12 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: false
       },
-      location: {
-        type: Sequelize.JSONB,
-        allowNull: false
-      },
       price: {
         type: Sequelize.NUMERIC
+      },
+      status: {
+        type: Sequelize.STRING,
+        allowNull: false
       },
       createdAt: {
         allowNull: false,
@@ -49,6 +49,10 @@ module.exports = {
       },
       updatedAt: {
         allowNull: false,
+        type: Sequelize.DATE
+      },
+      deletedAt: {
+        allowNull: true,
         type: Sequelize.DATE
       }
     });

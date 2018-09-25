@@ -12,4 +12,11 @@ router.get('/', (req,res,next) => {
         .catch(err => next(err))
 });
 
+router.post('/configuration', (req,res,next) => {
+    return CustomerService
+        .updateProfile(req.user.id, req.body)
+        .then(user => res.send(user))
+        .catch(err => next(err))
+})
+
 module.exports = router;

@@ -5,6 +5,7 @@ const _v = require('../api/validations');
 const errorBuilder = require('../api/errorBuilder');
 const {Customer, Role, CustomerConfiguration,sequelize} = require('../../models');
 const {hash} = require('../api/password')
+const elasticApi = require('../elasticsearch/api');
 
 
 const customerService = {};
@@ -58,13 +59,35 @@ customerService.get = async customerId => {
                 {
                     model: CustomerConfiguration, 
                     as: 'Configuration',
-                    attributes: ['location']
+                    attributes: ['location', 'tags']
                 }
             ]
         }
     );
     customer = customer.get({plain: true});
     return customer;
+}
+
+customerService.updateProfile = async (customerId, data) => {
+    let config = await CustomerConfiguration.findOne({where: {customerId}});
+
+    if(data.tags)
+        config.tags = data.tags;
+
+    if(data.location)
+        config.location = data.location;
+
+    await config.save();
+
+    await elasticApi.customer.createOrUpdate(
+        {
+            id: config.CustomerId,
+            location: config.location,
+            tags: config.tags
+        }
+    )
+
+    return customerService.get(customerId);
 }
 
 module.exports = customerService;

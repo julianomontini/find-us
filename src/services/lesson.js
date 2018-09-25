@@ -4,12 +4,27 @@ const _ = require('lodash');
 
 const _v = require('../api/validations');
 const errorBuilder = require('../api/errorBuilder');
-const { Lesson, LessonCandidate, Sequelize: { Op }, sequelize, Rating } = require('../../models');
+const { Lesson, LessonCandidate, Sequelize: { Op }, sequelize, Rating, Customer } = require('../../models');
 const extractor = require('../api/extractor');
 const keyWhilelist = require('../consts/whitelist').lesson;
+const elasticApi = require('../elasticsearch/api');
 
 
 const lessonService = {};
+
+const updateElastic = async lesson => {
+    let elasticLesson = {
+        id: lesson.id,
+        title: lesson.title,
+        description: lesson.description,
+        startTime: lesson.startTime,
+        endTime: lesson.endTime,
+        price: lesson.price,
+        location: lesson.location,
+        tags: lesson.tags
+    }
+    return elasticApi.lesson.createOrUpdate(elasticLesson);
+}
 
 lessonService.create = async (studentId, data) => {
     let validations = {..._v.lesson, ..._v.tags};
@@ -26,10 +41,14 @@ lessonService.create = async (studentId, data) => {
             description: data.description,
             startTime: data.startTime,
             endTime: data.endTime,
-            location: data.location,
             price: data.price,
-            studentId
+            studentId,
+            tags: data.tags,
+            location: data.location
         });
+
+    await updateElastic(lesson);
+
     return lessonService.get(studentId, lesson.id);
 }
 
@@ -42,6 +61,11 @@ lessonService.update = async(studentId, lessonId, data) => {
         
         lesson = _.merge(lesson, data);
 
+        if(data.tags)
+            lesson.tags = data.tags;
+        if(data.location)
+            lesson.location = data.location;
+
         let validationResult = validate(lesson, _v.lesson);
         if(validationResult)
             return Promise.reject(errorBuilder(400, validationResult));
@@ -50,6 +74,8 @@ lessonService.update = async(studentId, lessonId, data) => {
             return Promise.reject(errorBuilder(400, 'Start time must be after End time'));
 
         await lesson.save();
+
+        await updateElastic(lesson);
 
         return lessonService.get(studentId, lesson.id);
 }
@@ -198,6 +224,32 @@ lessonService.delete = async(studentId, lessonId) => {
         return Promise.reject(errorBuilder(403, "Customer is not lesson's owner"));
 
     await lesson.destroy();
+}
+
+lessonService.search = async ({term, coords, price}) => {
+    let result = await elasticApi.lesson.findLesson({term, coords, price});
+    let ids = result.hits.hits.map(h => h._id);
+
+    let lessons = await Lesson.findAll(
+        {
+            where: {
+                id: {
+                    $in: ids
+                }
+            },
+            attributes: ['id', 'title', 'description', 'tags', 'location', 'price'],
+            include: [
+                {
+                    model: Customer,
+                    as: 'Student',
+                    attributes: ['name']
+                }
+            ]
+        }
+    );
+
+    return lessons
+
 }
 
 const isValidDuration = (start, end) => {

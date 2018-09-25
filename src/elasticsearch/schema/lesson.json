@@ -1,4 +1,4 @@
-//PUT requisicao_aula
+//PUT lesson
 {
     "settings": {
         "analysis": {
@@ -27,20 +27,20 @@
     "mappings": {
         "_doc": {
             "properties": {
-                "inicio": {
+                "startTime": {
                     "type": "date"
                 },
-                "fim": {
+                "endTime": {
                     "type": "date"
                 },
-                "localizacao": {
+                "location": {
                     "type": "geo_point"
                 },
-                "titulo": {
+                "title": {
                     "type": "text",
                     "analyzer": "brazilian"
                 },
-                "descricao": {
+                "description": {
                     "type": "text",
                     "analyzer": "brazilian"
                 },
@@ -48,7 +48,7 @@
                     "type": "text",
                     "analyzer": "brazilian"
                 },
-                "preco": {
+                "price": {
                     "type": "float"
                 }
             }

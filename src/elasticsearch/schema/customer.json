@@ -1,10 +1,10 @@
-//PUT professor
+//PUT customer
 {
   
   "mappings": {
     "_doc": {
       "properties": {
-        "localizacao": {
+        "location": {
           "type": "geo_point"
         },
         "tags": {

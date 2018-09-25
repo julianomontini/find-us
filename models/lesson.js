@@ -11,7 +11,9 @@ module.exports = (sequelize, DataTypes) => {
     status: {
       type: DataTypes.STRING,
       defaultValue: 'pending'
-    }
+    },
+    location: DataTypes.JSONB,
+    tags: DataTypes.JSONB
   }, {timestamps: true, paranoid: true});
   Lesson.associate = function(models) {
     Lesson.belongsTo(models.Customer, {as: 'Student'});

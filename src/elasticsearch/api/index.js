@@ -1,7 +1,7 @@
-const aula = require('./aula');
-const tag = require('./tag');
+const lesson = require('./lesson');
+const customer = require('./customer');
 
 module.exports = {
-    aula,
-    tag
+    lesson,
+    customer
 }

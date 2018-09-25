@@ -20,10 +20,12 @@ const GeneralRouter = require('./src/routes/general');
 const StudentLessonRouter = require('./src/routes/studentLesson');
 const TeacherLessonRouter = require('./src/routes/teacherLesson');
 const CustomerRouter = require('./src/routes/customer');
+const RatingRouter = require('./src/routes/rating');
 app.use('/', GeneralRouter);
 app.use('/student-lesson', StudentLessonRouter);
 app.use('/teacher-lesson', TeacherLessonRouter);
 app.use('/customer', CustomerRouter);
+app.use('/rating', RatingRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

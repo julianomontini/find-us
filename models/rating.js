@@ -6,7 +6,8 @@ module.exports = (sequelize, DataTypes) => {
     fromCustomerId: DataTypes.INTEGER,
     toCustomerId: DataTypes.INTEGER,
     role: DataTypes.STRING,
-    lessonId: DataTypes.INTEGER
+    lessonId: DataTypes.INTEGER,
+    status: DataTypes.STRING
   }, {});
   Rating.associate = function(models) {
     Rating.belongsTo(models.Customer, {as: 'FromCustomer', foreignKey: 'fromCustomerId'});

@@ -4,7 +4,7 @@ const _ = require('lodash');
 
 const _v = require('../api/validations');
 const errorBuilder = require('../api/errorBuilder');
-const { Lesson, LessonCandidate, Sequelize: { Op }, sequelize } = require('../../models');
+const { Lesson, LessonCandidate, Sequelize: { Op }, sequelize, Rating } = require('../../models');
 const extractor = require('../api/extractor');
 const keyWhilelist = require('../consts/whitelist').lesson;
 
@@ -86,7 +86,22 @@ lessonService.approveCandidate = async(studentId, lessonId, teacherId) => {
         return Promise.reject(errorBuilder(404));
 
     return sequelize.transaction(async tr => {
-
+        await Rating.create(
+            {
+                fromCustomerId: studentId,
+                toCustomerId: teacherId,
+                lessonId,
+                role: 'Teacher'
+            }
+        )
+        await Rating.create(
+            {
+                toCustomerId: studentId,
+                fromCustomerId: teacherId,
+                lessonId,
+                role: 'Student'
+            }
+        )
         await LessonCandidate
             .update(
                 {

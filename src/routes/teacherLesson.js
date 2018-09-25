@@ -6,6 +6,13 @@ const TeacherLessonService = require('../services/teacherLesson');
 
 router.use(passport.authenticate('jwt'), roleMiddleware('Teacher'));
 
+router.get('/', (req,res,next) => {
+    return TeacherLessonService
+        .getSubscriptions(req.user.id)
+        .then(data => res.send(data))
+        .catch(err => next(err));
+})
+
 router.post('/:id/subscribe', (req,res,next) => {
     return TeacherLessonService
         .subscribe(req.user.id, req.params.id)

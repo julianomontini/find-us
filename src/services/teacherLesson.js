@@ -60,4 +60,21 @@ teacherLesson.unsubscribe = async (teacherId, lessonId) => {
     await subscription.save();
 }
 
+teacherLesson.getSubscriptions = async teacherId => {
+    return LessonCandidate.findAll(
+        {
+            where: {
+                teacherId
+            },
+            attributes: ['id', 'status'],
+            include: [
+                {
+                    model: Lesson,
+                    attributes: ['title']
+                }
+            ]
+        }
+    )
+}
+
 module.exports = teacherLesson;

@@ -9,7 +9,8 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {timestamps: true});
   LessonCandidate.associate = function(models) {
-    
+    LessonCandidate.belongsTo(models.Lesson);
+    LessonCandidate.belongsTo(models.Customer, {as: 'Teacher'});
   };
   return LessonCandidate;
 };

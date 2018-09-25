@@ -11,6 +11,8 @@ module.exports = (sequelize, DataTypes) => {
     Customer.belongsToMany(models.Role, {as: 'Roles', through: 'CustomerRole'});
     Customer.belongsToMany(models.Lesson, {as: 'CandidatedLessons', through: 'LessonCandidate', foreignKey: 'teacherId'});
     Customer.hasOne(models.CustomerConfiguration, {as: 'Configuration', foreignKey: 'customerId'});
+    Customer.hasMany(models.Rating, {as: 'RatingsRecieved', foreignKey: 'toCustomerId'});
+    Customer.hasMany(models.Rating, {as: 'RatingsGiven', foreignKey: 'fromCustomerId'});
   };
   return Customer;
 };

@@ -9,6 +9,13 @@ const keyWhitelist = require('../consts/whitelist').lesson;
 
 router.use(passport.authenticate('jwt'), roleMiddleware('Student'));
 
+router.get('/', (req,res,next) => {
+    lessonService
+        .listByStudent(req.user.id)
+        .then(data => res.send(data))
+        .catch(err => next(err))
+})
+
 router.post('/', (req,res,next) => {
     lessonService
         .create(req.user.id, extractData(req.body))

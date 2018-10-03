@@ -23,8 +23,8 @@ router.post('/signup', (req,res,next) => {
 
 router.post('/login', passport.authenticate('local'), async (req,res) => {
     try{
-        let customer = await Customer.findById(req.user.id);
-        res.send({token: tokenForUser(customer)});
+        let customer = await CustomerService.get(req.user.id);
+        res.send({token: tokenForUser(customer), ...customer});
     }catch(e){
         res.status(400).send();
     }

@@ -5,8 +5,6 @@ const _ = require('lodash');
 const _v = require('../api/validations');
 const errorBuilder = require('../api/errorBuilder');
 const { Lesson, LessonCandidate, Sequelize: { Op }, sequelize, Rating, Customer } = require('../../models');
-const extractor = require('../api/extractor');
-const keyWhilelist = require('../consts/whitelist').lesson;
 const elasticApi = require('../elasticsearch/api');
 
 
@@ -26,13 +24,31 @@ const updateElastic = async lesson => {
     return elasticApi.lesson.createOrUpdate(elasticLesson);
 }
 
+lessonService.listByStudent = async studentId => {
+    return Lesson.findAll(
+        {
+            where: {
+                studentId
+            },
+            attributes: ['id', 'title', 'description'],
+            include: [
+                {
+                    model: Customer,
+                    as: 'Teacher',
+                    attributes: ['id', 'name', 'phone']
+                }
+            ]
+        }
+    )
+}
+
 lessonService.create = async (studentId, data) => {
     let validations = {..._v.lesson, ..._v.tags};
     let validationResult = validate(data, validations);
     if(validationResult)
         return Promise.reject(errorBuilder(400, validationResult));
 
-    if(isValidDuration(data.startTime, data.endTime))
+    if(!isValidDuration(data.startTime, data.endTime))
         return Promise.reject(errorBuilder(400, 'Start time must be after End time'))
 
     let lesson = await Lesson
@@ -70,7 +86,7 @@ lessonService.update = async(studentId, lessonId, data) => {
         if(validationResult)
             return Promise.reject(errorBuilder(400, validationResult));
 
-        if(isValidDuration(lesson.startTime, lesson.endTime))
+        if(!isValidDuration(lesson.startTime, lesson.endTime))
             return Promise.reject(errorBuilder(400, 'Start time must be after End time'));
 
         await lesson.save();
@@ -86,7 +102,26 @@ lessonService.getCandidates = async(studentId, lessonId) => {
         return Promise.reject(errorBuilder(404));
     if(lesson.StudentId != studentId)
         return Promise.reject(errorBuilder(403, "Customer is not lesson's owner"));
-    return lesson.getCandidates({attributes: ['id', 'name']});
+
+    const query = `
+        SELECT 
+            C.ID,
+            C.NAME,
+            (
+                SELECT AVG(VALUE)
+                FROM RATINGS r
+                WHERE r.TOCUSTOMERID = C.ID
+                AND r.ROLE = 'Teacher'
+                AND r.STATUS = 'completed'
+            ) as RATING
+        FROM CUSTOMERS C
+        JOIN LESSONCANDIDATES LC
+        ON C.ID = LC.TEACHERID
+        AND LC.STATUS = 'pending'
+        WHERE LC.LESSONID = ?
+    `;
+
+    return sequelize.query(query, {replacements: [lessonId], type: sequelize.QueryTypes.SELECT})
 }
 
 lessonService.approveCandidate = async(studentId, lessonId, teacherId) => {
@@ -201,19 +236,25 @@ lessonService.rejectCandidate = async (studentId, lessonId, teacherId) => {
 }
 
 lessonService.get = async (studentId, lessonId) => {
-    let whitelist = _.clone(keyWhilelist);
-    whitelist.push('id');
-
-
-    let lesson = await Lesson.findById(lessonId);
-    lesson = lesson.get({plain: true});
-
+    let lesson = await Lesson.findById(
+        lessonId,
+        {
+            attributes: ['id', 'title', 'description', 'startTime', 'endTime', 'price', 'location', 'tags', 'StudentId'],
+            include: [
+                {
+                    model: Customer,
+                    as: 'Teacher',
+                    attributes: ['id', 'name', 'phone']
+                }
+            ]
+        }, 
+    );
+    lesson = lesson.get({plain: true})
     if(!lesson)
         return Promise.reject(errorBuilder(404));
     if(lesson.StudentId != studentId)
-        return Promise.reject(errorBuilder(403, "Customer is not lesson's owner"));
-
-    return extractor(whitelist)(lesson);    
+        return Promise.reject(errorBuilder(403, "Customer is not lesson's owner"));    
+    return lesson;
 }
 
 lessonService.delete = async(studentId, lessonId) => {
@@ -226,34 +267,45 @@ lessonService.delete = async(studentId, lessonId) => {
     await lesson.destroy();
 }
 
-lessonService.search = async ({term, coords, price}) => {
+lessonService.search = async (userId, {term, coords, price}) => {
     let result = await elasticApi.lesson.findLesson({term, coords, price});
     let ids = result.hits.hits.map(h => h._id);
-
-    let lessons = await Lesson.findAll(
-        {
-            where: {
-                id: {
-                    $in: ids
-                }
-            },
-            attributes: ['id', 'title', 'description', 'tags', 'location', 'price'],
-            include: [
-                {
-                    model: Customer,
-                    as: 'Student',
-                    attributes: ['name']
-                }
-            ]
-        }
-    );
-
-    return lessons
+    if(!ids || ids.length == 0)
+        return [];
+    const query = `
+        SELECT 
+            l.id,
+            l.title, 
+            l.description, 
+            l.starttime, 
+            l.endtime, 
+            l.price,
+            std.name,
+            (
+                SELECT avg(value)
+                FROM ratings r
+                WHERE tocustomerid = std.id
+                AND r.role = 'Student'
+                AND r.status = 'completed'
+            ) as rating
+        FROM lessons l
+        JOIN customers std
+        ON l.studentid = std.id
+        WHERE l.id in (?)
+        AND l.id NOT IN (
+            SELECT il.id
+            FROM lessons il
+            JOIN lessoncandidates ilc
+            ON il.id = ilc.lessonid
+            AND ilc.teacherid = ?
+        )
+    `
+    return sequelize.query(query, {replacements: [[...ids], userId], type: sequelize.QueryTypes.SELECT})
 
 }
 
 const isValidDuration = (start, end) => {
-    return moment(start).isBefore(end);
+    return moment(start, moment.ISO_8601).isBefore(end, moment.ISO_8601);
 }
 
 module.exports = lessonService;

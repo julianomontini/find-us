@@ -32,7 +32,7 @@ router.post('/search', (req, res, next) => {
     if(!req.body.term)
         return res.status(404).send();
     return LessonService
-        .search(req.body)
+        .search(req.user.id, req.body)
         .then(data => res.send(data))
         .catch(err => next(err))
 })

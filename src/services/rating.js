@@ -1,4 +1,4 @@
-const { Rating, Lesson } = require('../../models');
+const { Rating, Lesson, Customer } = require('../../models');
 const errorBuilder = require('../api/errorBuilder');
 
 const ratingService = {};
@@ -15,6 +15,11 @@ ratingService.getPending = async customerId => {
                 {
                     model: Lesson,
                     attributes: ['title']
+                }, 
+                {
+                    model: Customer,
+                    as: 'ToCustomer',
+                    attributes: ['name']
                 }
             ]
         }
@@ -24,7 +29,7 @@ ratingService.getPending = async customerId => {
 ratingService.getReceived = async customerId => {
     return Rating.findAll(
         {
-            attributes: ['id', 'role'],
+            attributes: ['id', 'role', 'value', 'comment'],
             where: {
                 toCustomerId: customerId,
                 status: 'completed'
@@ -33,6 +38,11 @@ ratingService.getReceived = async customerId => {
                 {
                     model: Lesson,
                     attributes: ['title']
+                },
+                {
+                    model: Customer,
+                    as: 'FromCustomer',
+                    attributes: ['name']
                 }
             ]
         }

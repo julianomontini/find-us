@@ -12,6 +12,21 @@ router.get('/', (req,res,next) => {
         .catch(err => next(err))
 });
 
+router.post('/tags-suggestion', (req,res,next) => {
+    return CustomerService
+        .getTagsSuggestion(req.body.term)
+        .then(data => res.send(data))
+        .catch(err => next(err))
+
+})
+
+router.get('/statistics', (req,res,next) => {
+    return CustomerService
+        .statistics(req.user.id)
+        .then(data => res.send(data))
+        .catch(err => next(err))
+})
+
 router.post('/configuration', (req,res,next) => {
     return CustomerService
         .updateProfile(req.user.id, req.body)

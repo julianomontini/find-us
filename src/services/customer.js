@@ -29,6 +29,13 @@ customerService.create = async customer => {
     let newCustomer = await sequelize.transaction(async tr => {
         let newCustomer = await Customer.create(customer, {transaction: tr})
 
+        await elasticApi.customer.createOrUpdate(
+            {
+                id: newCustomer.id,
+                roles: customer.roles,
+            }
+        )
+
         let roles = await Role.findAll({where: {name: customer.roles}})
         await newCustomer.setRoles(roles, {transaction: tr});
         await newCustomer.createConfiguration({}, {transaction: tr})
@@ -88,6 +95,67 @@ customerService.updateProfile = async (customerId, data) => {
     )
 
     return customerService.get(customerId);
+}
+
+customerService.statistics = async customerId => {
+    let queries = [];
+    queries.push(sequelize.query(`
+        SELECT COUNT(1)
+        FROM LESSONS
+        WHERE STUDENTID = ?
+    `, {replacements: [customerId]}));
+
+    queries.push(sequelize.query(`
+        SELECT COUNT(1)
+        FROM LESSONS
+        WHERE TEACHERID = ?
+    `, {replacements: [customerId]}));
+
+    queries.push(sequelize.query(`
+        SELECT COUNT(1)
+        FROM LESSONS L
+        WHERE L.STUDENTID = ?
+        AND L.TEACHERID IS NOT NULL
+    `, {replacements: [customerId]}));
+
+    queries.push(sequelize.query(`
+        SELECT COUNT(1)
+        FROM LESSONCANDIDATES
+        WHERE TEACHERID = ?
+    `, {replacements: [customerId]}));
+
+    queries.push(sequelize.query(`
+        SELECT AVG(value)
+        FROM RATINGS R
+        JOIN LESSONS L
+        ON R.LESSONID = L.ID
+        WHERE TOCUSTOMERID = ?
+        AND R.STATUS = 'completed'
+    `, {replacements: [customerId]}));
+
+    queries.push(elasticApi.customer.getById(customerId))
+
+    let result = await Promise.all(queries);
+    return {
+        studentLessons: result[0][0][0]['count'],
+        teacherLessons: result[1][0][0]['count'],
+        completedLessons: result[2][0][0]['count'],
+        candidated: result[3][0][0]['count'],
+        average: result[4][0][0]['avg'],
+        tags: result[5].tags
+    };
+}
+
+customerService.getTagsSuggestion = async term => {
+    return elasticApi.customer.findTagsSuggestion(term)
+        .then(result => {
+            return result
+                .hits
+                .hits.map(h => h.inner_hits.tags.hits.hits.map(ih => ih._source.name))
+        })
+        .then(data => {
+            return _.uniq(_.flatten(data))
+        })
 }
 
 module.exports = customerService;

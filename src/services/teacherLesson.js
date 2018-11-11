@@ -1,3 +1,5 @@
+const sms = require('../aws/sms');
+
 const { Customer, Lesson, LessonCandidate } = require('../../models');
 const errorBuilder = require('../api/errorBuilder');
 
@@ -38,6 +40,11 @@ teacherLesson.subscribe = async (teacherId, lessonId) => {
         )
     }
 
+    let student = await lesson.getStudent();
+    let message = `Um novo professor se candidatou para a sua aula "${lesson.title}". Acesse a plataforma para mais detalhes.`;
+
+    await sms(message, student.phone);
+
 }
 
 teacherLesson.unsubscribe = async (teacherId, lessonId) => {
@@ -70,11 +77,23 @@ teacherLesson.getSubscriptions = async teacherId => {
             include: [
                 {
                     model: Lesson,
-                    attributes: ['title']
+                    attributes: ['title', 'starttime', 'endtime', 'price', 'teacherId'],
+                    include: [
+                        {
+                            model: Customer,
+                            attributes: ['name', 'phone'],
+                            as: 'Student'
+                        }
+                    ]
                 }
             ]
         }
-    )
+    ).map(lesson => {
+        if(lesson.Lesson.teacherId != teacherId){
+            lesson.Lesson.Student.phone = null;
+        }
+        return lesson;
+    })
 }
 
 module.exports = teacherLesson;

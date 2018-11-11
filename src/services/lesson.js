@@ -6,6 +6,7 @@ const _v = require('../api/validations');
 const errorBuilder = require('../api/errorBuilder');
 const { Lesson, LessonCandidate, Sequelize: { Op }, sequelize, Rating, Customer } = require('../../models');
 const elasticApi = require('../elasticsearch/api');
+const sms = require('../aws/sms');
 
 
 const lessonService = {};
@@ -18,8 +19,7 @@ const updateElastic = async lesson => {
         startTime: lesson.startTime,
         endTime: lesson.endTime,
         price: lesson.price,
-        location: lesson.location,
-        tags: lesson.tags
+        location: lesson.location
     }
     return elasticApi.lesson.createOrUpdate(elasticLesson);
 }
@@ -43,7 +43,7 @@ lessonService.listByStudent = async studentId => {
 }
 
 lessonService.create = async (studentId, data) => {
-    let validations = {..._v.lesson, ..._v.tags};
+    let validations = {..._v.lesson};
     let validationResult = validate(data, validations);
     if(validationResult)
         return Promise.reject(errorBuilder(400, validationResult));
@@ -59,11 +59,28 @@ lessonService.create = async (studentId, data) => {
             endTime: data.endTime,
             price: data.price,
             studentId,
-            tags: data.tags,
             location: data.location
         });
 
     await updateElastic(lesson);
+
+    let candidates = (await elasticApi.customer.findSuggestionsForLesson(lesson.title, lesson.description)).hits.hits;
+    candidates = candidates.map(c => c._id).filter(id => id !== studentId);
+
+    candidates = await Customer.findAll({
+        where: {
+            id: candidates
+        }
+    });
+
+    let smss = [];
+
+    candidates.forEach(c => {
+        let message = `Oba! Achamos que a aula "${lesson.title}" vai lhe interessar. Entre na plataforma e procure pelo id ${lesson.id}`
+        smss.push(sms(message, c.phone))
+    })
+
+    await Promise.all(smss);
 
     return lessonService.get(studentId, lesson.id);
 }
@@ -77,8 +94,6 @@ lessonService.update = async(studentId, lessonId, data) => {
         
         lesson = _.merge(lesson, data);
 
-        if(data.tags)
-            lesson.tags = data.tags;
         if(data.location)
             lesson.location = data.location;
 
@@ -125,7 +140,14 @@ lessonService.getCandidates = async(studentId, lessonId) => {
 }
 
 lessonService.approveCandidate = async(studentId, lessonId, teacherId) => {
-    let lesson = await Lesson.findById(lessonId);
+    let lesson = await Lesson.findById(lessonId, {
+        include: [
+            {
+                model: Customer,
+                as: 'Student'
+            }
+        ]
+    });
     if(!lesson)
         return Promise.reject(errorBuilder(404));
     if(lesson.StudentId != studentId)
@@ -145,6 +167,12 @@ lessonService.approveCandidate = async(studentId, lessonId, teacherId) => {
 
     if(!subscription)
         return Promise.reject(errorBuilder(404));
+
+    let teacher = await subscription.getTeacher();
+    let student = lesson.Student;
+
+    let message = `O aluno ${student.name} aceitou a sua proposta para a aula ${lesson.title}!`
+    await sms(message, teacher.phone);
 
     return sequelize.transaction(async tr => {
         await Rating.create(
@@ -239,7 +267,7 @@ lessonService.get = async (studentId, lessonId) => {
     let lesson = await Lesson.findById(
         lessonId,
         {
-            attributes: ['id', 'title', 'description', 'startTime', 'endTime', 'price', 'location', 'tags', 'StudentId'],
+            attributes: ['id', 'title', 'description', 'startTime', 'endTime', 'price', 'location', 'StudentId'],
             include: [
                 {
                     model: Customer,
@@ -263,6 +291,8 @@ lessonService.delete = async(studentId, lessonId) => {
         return Promise.reject(errorBuilder(404));
     if(lesson.StudentId != studentId)
         return Promise.reject(errorBuilder(403, "Customer is not lesson's owner"));
+
+    await elasticApi.lesson.delete(lessonId);
 
     await lesson.destroy();
 }

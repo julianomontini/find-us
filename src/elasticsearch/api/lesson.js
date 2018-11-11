@@ -13,6 +13,10 @@ lessonApi.createOrUpdate = lesson => {
     )
 }
 
+lessonApi.delete = id => {
+    return elastic.delete({index: 'lesson',id, type: '_doc'})
+}
+
 lessonApi.findLesson = ({term, coords, price}) => {
     const request = {
         query: {
@@ -21,7 +25,7 @@ lessonApi.findLesson = ({term, coords, price}) => {
                     {
                         multi_match: {
                             query: term,
-                            fields: ['title', 'description', 'tags']
+                            fields: ['title', 'description']
                         }
                     }
                 ],

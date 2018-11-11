@@ -85,7 +85,6 @@ exports.lesson = {
             allowEmpty: false
         },
         length: {
-            minimum: 5,
             maximum: 35
         }
     },
@@ -94,7 +93,6 @@ exports.lesson = {
             allowEmpty: false
         },
         length: {
-            minimum: 30,
             maximum: 300
         }
     },

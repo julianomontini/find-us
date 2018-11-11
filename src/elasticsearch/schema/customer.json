@@ -8,8 +8,13 @@
           "type": "geo_point"
         },
         "tags": {
-          "type": "text",
-          "analyzer": "brazilian"
+          "type": "nested",
+          "properties": {
+            "name": {
+              "type": "text",
+              "analyzer": "autocomplete"
+            }
+          }
         }
       }
     }
@@ -24,6 +29,11 @@
         "brazilian_stemmer": {
           "type":       "stemmer",
           "language":   "brazilian"
+        },
+        "autocomplete_filter": { 
+          "type":     "edge_ngram",
+          "min_gram": 1,
+          "max_gram": 20
         }
       },
       "analyzer": {
@@ -33,6 +43,14 @@
             "lowercase",
             "brazilian_stop",
             "brazilian_stemmer"
+          ]
+        },
+        "autocomplete": {
+          "type":      "custom",
+          "tokenizer": "standard",
+          "filter": [
+              "lowercase",
+              "autocomplete_filter" 
           ]
         }
       }

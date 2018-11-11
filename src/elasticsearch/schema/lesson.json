@@ -44,10 +44,6 @@
                     "type": "text",
                     "analyzer": "brazilian"
                 },
-                "tags": {
-                    "type": "text",
-                    "analyzer": "brazilian"
-                },
                 "price": {
                     "type": "float"
                 }

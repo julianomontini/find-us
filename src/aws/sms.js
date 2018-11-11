@@ -5,8 +5,6 @@ AWS.config.loadFromPath('config/aws.json');
 
 module.exports = async (message, phone) => {
 
-    return Promise.resolve();
-
     phone = phone.replace(/[\(\)]+/g, "").replace(/[\-]/g, "");
     phone = "+55" + phone;
 
